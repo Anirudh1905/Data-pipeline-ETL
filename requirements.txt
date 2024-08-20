@@ -1,0 +1,8 @@
+apache-airflow-providers-amazon
+apache-airflow-providers-postgres
+boto3
+fastapi
+psycopg2-binary
+redis
+sqlalchemy
+uvicorn
