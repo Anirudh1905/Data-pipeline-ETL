@@ -4,4 +4,4 @@ A scalable ETL system architecture leveraging AWS services like EKS, Kinesis, Ai
 
 ## High Level Design
 
-![]()![1724158289384](image/README/1724158289384.png)
+![HLD](Designs/HLD.png)
