@@ -1,0 +1,31 @@
+name: Upload to S3 on File Change
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'dags/*'
+
+env:
+  S3_BUCKET: mwaa-bucket-20240815070755968200000001
+  AWS_REGION: us-east-1
+
+jobs:
+  upload_to_s3:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Upload files to S3
+      run: |
+        aws s3 cp dags/ s3://${{ env.S3_BUCKET }}/dags/ --recursive
