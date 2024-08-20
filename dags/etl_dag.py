@@ -31,30 +31,47 @@ dag = DAG(
 )
 
 
-# Function to recursively list and read S3 objects, and transform the data
+def list_keys_recursive(s3_hook, bucket, prefix=""):
+    """
+    Recursively list and filter S3 objects modified in the last 24 hours.
+
+    Args:
+        s3_hook (S3Hook): The S3 hook to interact with S3.
+        bucket (str): The name of the S3 bucket.
+        prefix (str): The prefix to filter objects.
+
+    Returns:
+        list: A list of keys for objects modified in the last 24 hours.
+    """
+    keys = []
+    kwargs = {"Bucket": bucket, "Prefix": prefix}
+    while True:
+        resp = s3_hook.get_conn().list_objects_v2(**kwargs)
+        if "Contents" in resp:
+            for obj in resp["Contents"]:
+                if obj["LastModified"] > datetime.now(
+                    obj["LastModified"].tzinfo
+                ) - timedelta(hours=24):
+                    keys.append(obj["Key"])
+        if "NextContinuationToken" in resp:
+            kwargs["ContinuationToken"] = resp["NextContinuationToken"]
+        else:
+            break
+    return keys
+
+
 def read_transform_store_data(**kwargs):
+    """
+    Read data from S3, transform it, and store it in RDS PostgreSQL.
 
+    This function reads JSON data from S3, transforms it, and upserts it into
+    the Users table in RDS PostgreSQL.
+
+    Args:
+        kwargs (dict): Additional keyword arguments passed by Airflow.
+    """
     s3_hook = S3Hook(aws_conn_id=AWS_CONN_ID)
-
-    def list_keys_recursive(bucket, prefix=""):
-        keys = []
-        kwargs = {"Bucket": bucket, "Prefix": prefix}
-        while True:
-            resp = s3_hook.get_conn().list_objects_v2(**kwargs)
-            if "Contents" in resp:
-                for obj in resp["Contents"]:
-                    # Filter objects modified in the last 24 hours
-                    if obj["LastModified"] > datetime.now(
-                        obj["LastModified"].tzinfo
-                    ) - timedelta(hours=24):
-                        keys.append(obj["Key"])
-            if "NextContinuationToken" in resp:
-                kwargs["ContinuationToken"] = resp["NextContinuationToken"]
-            else:
-                break
-        return keys
-
-    keys = list_keys_recursive(BUCKET_NAME)
+    keys = list_keys_recursive(s3_hook, BUCKET_NAME)
 
     logging.info(f"Found {len(keys)} objects in the S3 bucket")
     all_records = []
