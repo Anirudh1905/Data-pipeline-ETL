@@ -42,9 +42,9 @@ class ResponseModel(BaseModel):
     Attributes:
         status (str): The status of the response (e.g., "Success" or "Failed").
         cached (bool): Indicates whether the response was retrieved from cache.
-        response (Union[dict, list]): The actual response data, which can be a dictionary or a list.
+        response (dict): The actual response data, which can be a dictionary.
     """
 
     status: str
     cached: bool
-    response: Union[dict, list]
+    response: dict

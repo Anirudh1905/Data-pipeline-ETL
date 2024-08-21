@@ -54,7 +54,7 @@ async def send_data(user: DataModel) -> ResponseModel:
 
     if cached_data:
         return ResponseModel(
-            status="Success", cached=True, response=json.loads(cached_data)
+            status="Success", cached=True, response={"result": "Data already in stream"}
         )
 
     response = kinesis_client.put_record(
@@ -62,8 +62,16 @@ async def send_data(user: DataModel) -> ResponseModel:
     )
 
     redis_client.set(redis_key_id, json.dumps(user.dict()))
+    if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
+        return ResponseModel(
+            status="Failed",
+            cached=False,
+            response={"result": "Failed to add data to stream"},
+        )
 
-    return ResponseModel(status="Success", cached=False, response=response)
+    return ResponseModel(
+        status="Success", cached=False, response={"result": "Data added to stream"}
+    )
 
 
 @app.get("/users")
