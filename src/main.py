@@ -1,3 +1,4 @@
+from datetime import timedelta
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy import create_engine
@@ -18,6 +19,7 @@ kinesis_client = boto3.client("kinesis", region_name="us-east-1")
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 Base.metadata.create_all(engine, checkfirst=True)
+CACHE_EXPIRATION_TIME = timedelta(days=1)
 app = FastAPI()
 
 
@@ -61,13 +63,19 @@ async def send_data(user: DataModel) -> ResponseModel:
         StreamName=STREAM_NAME, Data=json.dumps(user.dict()), PartitionKey=str(user.id)
     )
 
-    redis_client.set(redis_key_id, json.dumps(user.dict()))
     if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
         return ResponseModel(
             status="Failed",
             cached=False,
             response={"result": "Failed to add data to stream"},
         )
+
+    redis_client.delete(redis_key_id)
+    redis_client.set(
+        redis_key_id,
+        json.dumps(user.dict()),
+        ex=int(CACHE_EXPIRATION_TIME.total_seconds()),
+    )
 
     return ResponseModel(
         status="Success", cached=False, response={"result": "Data added to stream"}
