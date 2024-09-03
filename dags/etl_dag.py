@@ -65,7 +65,7 @@ def read_transform_store_data(**kwargs):
     Read data from S3, transform it, and store it in RDS PostgreSQL.
 
     This function reads JSON data from S3, transforms it, and upserts it into
-    the Users table in RDS PostgreSQL.
+    the TelecomUsers table in RDS PostgreSQL.
 
     Args:
         kwargs (dict): Additional keyword arguments passed by Airflow.
@@ -99,12 +99,56 @@ def read_transform_store_data(**kwargs):
     for record in all_records:
         json_data = json.loads(record)
         upsert_query = """
-        INSERT INTO "Users" (id, name)
-        VALUES (%s, %s)
-        ON CONFLICT (id) DO UPDATE SET
-        name = EXCLUDED.name;
+        INSERT INTO "TelecomUsers" ("customerID", "gender", "SeniorCitizen", "Partner", "Dependents", "tenure", "PhoneService", "MultipleLines", "InternetService", "OnlineSecurity", "OnlineBackup", "DeviceProtection", "TechSupport", "StreamingTV", "StreamingMovies", "Contract", "PaperlessBilling", "PaymentMethod", "MonthlyCharges", "TotalCharges", "Churn")
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT ("customerID") DO UPDATE SET
+        "gender" = EXCLUDED."gender",
+        "SeniorCitizen" = EXCLUDED."SeniorCitizen",
+        "Partner" = EXCLUDED."Partner",
+        "Dependents" = EXCLUDED."Dependents",
+        "tenure" = EXCLUDED."tenure",
+        "PhoneService" = EXCLUDED."PhoneService",
+        "MultipleLines" = EXCLUDED."MultipleLines",
+        "InternetService" = EXCLUDED."InternetService",
+        "OnlineSecurity" = EXCLUDED."OnlineSecurity",
+        "OnlineBackup" = EXCLUDED."OnlineBackup",
+        "DeviceProtection" = EXCLUDED."DeviceProtection",
+        "TechSupport" = EXCLUDED."TechSupport",
+        "StreamingTV" = EXCLUDED."StreamingTV",
+        "StreamingMovies" = EXCLUDED."StreamingMovies",
+        "Contract" = EXCLUDED."Contract",
+        "PaperlessBilling" = EXCLUDED."PaperlessBilling",
+        "PaymentMethod" = EXCLUDED."PaymentMethod",
+        "MonthlyCharges" = EXCLUDED."MonthlyCharges",
+        "TotalCharges" = EXCLUDED."TotalCharges",
+        "Churn" = EXCLUDED."Churn";
         """
-        cursor.execute(upsert_query, (json_data["id"], json_data["name"]))
+        cursor.execute(
+            upsert_query,
+            (
+                json_data["customerID"],
+                json_data["gender"],
+                json_data["SeniorCitizen"],
+                json_data["Partner"],
+                json_data["Dependents"],
+                json_data["tenure"],
+                json_data["PhoneService"],
+                json_data["MultipleLines"],
+                json_data["InternetService"],
+                json_data["OnlineSecurity"],
+                json_data["OnlineBackup"],
+                json_data["DeviceProtection"],
+                json_data["TechSupport"],
+                json_data["StreamingTV"],
+                json_data["StreamingMovies"],
+                json_data["Contract"],
+                json_data["PaperlessBilling"],
+                json_data["PaymentMethod"],
+                json_data["MonthlyCharges"],
+                json_data["TotalCharges"],
+                json_data["Churn"],
+            ),
+        )
         conn.commit()
 
     cursor.close()

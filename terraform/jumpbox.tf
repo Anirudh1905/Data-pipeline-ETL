@@ -28,6 +28,10 @@ resource "local_file" "jumpbox_pem" {
   provisioner "local-exec" {
     command = "chmod 400 ${path.module}/jumpbox_key.pem"
   }
+
+  lifecycle {
+    ignore_changes = [content]
+  }
 }
 
 resource "aws_key_pair" "jumpbox_key" {
@@ -36,11 +40,11 @@ resource "aws_key_pair" "jumpbox_key" {
 }
 
 resource "aws_instance" "jumpbox" {
-  ami             = "ami-0ae8f15ae66fe8cda"
-  instance_type   = "t2.micro"
-  subnet_id       = aws_subnet.public-us-east-1a.id
-  security_groups = [aws_security_group.jumpbox_sg.id]
-  key_name        = aws_key_pair.jumpbox_key.key_name
+  ami                    = "ami-0ae8f15ae66fe8cda"
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.public-us-east-1a.id
+  vpc_security_group_ids = [aws_security_group.jumpbox_sg.id]
+  key_name               = aws_key_pair.jumpbox_key.key_name
 
 
   connection {
@@ -49,6 +53,7 @@ resource "aws_instance" "jumpbox" {
     private_key = tls_private_key.jumpbox_key.private_key_pem
     host        = self.public_ip
   }
+  depends_on = [local_file.jumpbox_pem]
 }
 
 output "jumpbox_public_ip" {

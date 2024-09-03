@@ -78,6 +78,21 @@ resource "aws_iam_role_policy_attachment" "nodes_rds_access" {
   role       = aws_iam_role.nodes.name
 }
 
+resource "aws_iam_role_policy_attachment" "nodes_sagemaker_access" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+  role       = aws_iam_role.nodes.name
+}
+
+resource "aws_iam_role_policy_attachment" "nodes_s3_access" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+  role       = aws_iam_role.nodes.name
+}
+
+resource "aws_iam_role_policy_attachment" "nodes_sqs_access" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+  role       = aws_iam_role.nodes.name
+}
+
 resource "aws_eks_node_group" "private_nodes" {
   cluster_name    = aws_eks_cluster.cluster.name
   node_group_name = "nodes-general"
@@ -112,6 +127,9 @@ resource "aws_eks_node_group" "private_nodes" {
     aws_iam_role_policy_attachment.nodes_amazon_eks_cni_policy,
     aws_iam_role_policy_attachment.nodes_amazon_ec2_container_registry_read_only,
     aws_iam_role_policy_attachment.nodes_kinesis_access,
-    aws_iam_role_policy_attachment.nodes_rds_access
+    aws_iam_role_policy_attachment.nodes_rds_access,
+    aws_iam_role_policy_attachment.nodes_sagemaker_access,
+    aws_iam_role_policy_attachment.nodes_s3_access,
+    aws_iam_role_policy_attachment.nodes_sqs_access
   ]
 }

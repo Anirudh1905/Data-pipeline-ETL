@@ -1,8 +1,9 @@
-apache-airflow-providers-amazon
-apache-airflow-providers-postgres
 boto3
 fastapi
 psycopg2-binary
 redis
 sqlalchemy
 uvicorn
+numpy==1.26.4
+scikit-learn==1.2.1
+pandas

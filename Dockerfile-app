@@ -3,7 +3,9 @@ FROM python:3.11-slim
 USER root
 RUN apt-get update && apt-get install -y gcc python3-dev
 
-RUN pip3 install fastapi sqlalchemy psycopg2-binary uvicorn boto3 redis
+COPY requirements.txt requirements.txt
+
+RUN pip3 install -r requirements.txt
 
 COPY src src
 
