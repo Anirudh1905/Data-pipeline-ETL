@@ -1,4 +1,4 @@
-# Data-pipeline-ETL
+# Telecom-Churn-Prediction
 
 The architecture is designed to handle large volumes of data, ensure low latency, and facilitate both ETL (Extract, Transform, Load) and ML (Machine Learning) pipelines. 
 
