@@ -1,6 +1,6 @@
-# Data-pipeline-ETL
+# Telecom-Churn-Prediction
 
-A scalable ETL system architecture leveraging AWS services like EKS, Kinesis, Airflow, and RDS for efficient data processing and storage.
+The architecture is designed to handle large volumes of data, ensure low latency, and facilitate both ETL (Extract, Transform, Load) and ML (Machine Learning) pipelines. 
 
 To know more details reagrding the project, kindly refer to this Medium [blog](https://medium.com/@anirudhsridhar1905/data-pipeline-etl-11490accfae3).
 
