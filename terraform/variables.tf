@@ -13,7 +13,6 @@ variable "name" {
 variable "account_id" {
   description = "The AWS account ID where resources will be deployed."
   type        = string
-  default     = 765826404413
 }
 
 variable "kms_key_arn" {
