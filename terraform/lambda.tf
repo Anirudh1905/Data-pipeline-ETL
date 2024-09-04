@@ -134,27 +134,11 @@ resource "aws_lambda_function" "my_lambda" {
   }
 }
 
-# Create a CloudWatch Event rule to trigger the Lambda function every 15 minutes
-resource "aws_cloudwatch_event_rule" "every_15_minutes" {
-  name                = "every-15-minutes"
-  description         = "Triggers Lambda function every 15 minutes"
-  schedule_expression = "cron(0/15 * * * ? *)"
-}
-
-# Create a CloudWatch Event target to invoke the Lambda function
-resource "aws_cloudwatch_event_target" "lambda_target" {
-  rule      = aws_cloudwatch_event_rule.every_15_minutes.name
-  target_id = "lambda"
-  arn       = aws_lambda_function.my_lambda.arn
-}
-
-# Allow CloudWatch Events to invoke the Lambda function
-resource "aws_lambda_permission" "allow_cloudwatch" {
-  statement_id  = "AllowExecutionFromCloudWatch"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.my_lambda.function_name
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.every_15_minutes.arn
+resource "aws_lambda_event_source_mapping" "sqs_trigger" {
+  event_source_arn  = aws_sqs_queue.my_queue.arn
+  function_name     = aws_lambda_function.my_lambda.arn
+  batch_size        = 10
+  enabled           = true
 }
 
 output "sqs_url" {

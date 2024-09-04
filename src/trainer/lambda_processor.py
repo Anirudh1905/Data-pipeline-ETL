@@ -8,7 +8,7 @@ sagemaker = boto3.client("sagemaker")
 sqs = boto3.client("sqs")
 s3 = boto3.client("s3")
 
-MAX_CONCURRENT_JOBS = 20
+MAX_CONCURRENT_JOBS = 30
 QUEUE_URL = os.environ["SQS_QUEUE_URL"]
 DLQ_URL = os.environ["DLQ_URL"]
 MODEL_BUCKET_NAME = os.environ["MODEL_BUCKET_NAME"]
@@ -20,12 +20,12 @@ def lambda_handler(event, context):
     AWS Lambda function to manage SageMaker training jobs.
 
     This function checks the number of currently running SageMaker training jobs and starts new ones
-    if there is available capacity. It polls messages from an SQS queue, each containing information
+    if there is available capacity. It processes messages from an SQS queue, each containing information
     about a training job to start. If a training job starts successfully, the message is deleted from
     the queue. If it fails, the message is sent to a dead-letter queue (DLQ).
 
     Args:
-        event (dict): The event data passed to the Lambda function.
+        event (dict): The event data passed to the Lambda function, containing SQS messages.
         context (object): The context in which the Lambda function is called.
 
     Returns:
@@ -43,25 +43,10 @@ def lambda_handler(event, context):
     # Check if we can start a new training job
     if available_capacity > 0:
         # Poll a message from the SQS queue
-        messages_list = []
-        while available_capacity > 0:
-            messages = sqs.receive_message(
-                QueueUrl=QUEUE_URL,
-                MaxNumberOfMessages=min(10, available_capacity),
-                WaitTimeSeconds=20,
-            )
-            if "Messages" in messages:
-                messages_list.extend(messages["Messages"])
-                available_capacity -= len(messages["Messages"])
-            else:
-                print("No messages in the queue")
-                break
-
-        print("Number of messages: ", len(messages_list))
         results = []
-        for message in messages_list:
-            receipt_handle = message["ReceiptHandle"]
-            body = json.loads(message["Body"])
+        for record in event['Records']:
+            receipt_handle = record["receiptHandle"]
+            body = json.loads(record["body"])
             input_s3_path = body["s3_path"]
             training_job_name = body["training_job_name"]
             response = sagemaker_train(training_job_name, input_s3_path)
@@ -74,7 +59,7 @@ def lambda_handler(event, context):
                 )
             else:
                 logging.error(f"Failed to start training job {training_job_name}")
-                sqs.send_message(QueueUrl=DLQ_URL, MessageBody=json.dumps(message))
+                sqs.send_message(QueueUrl=DLQ_URL, MessageBody=json.dumps(record))
                 results.append(
                     {
                         "training_job_name": training_job_name,
